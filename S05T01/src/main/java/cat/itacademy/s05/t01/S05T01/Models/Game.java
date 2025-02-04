@@ -3,7 +3,7 @@ package cat.itacademy.s05.t01.S05T01.Models;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "games")
+@Document(collection = "game")
 public class Game {
     @Id
     private String id;

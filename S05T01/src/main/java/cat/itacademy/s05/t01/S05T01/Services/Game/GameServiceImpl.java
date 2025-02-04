@@ -16,7 +16,7 @@ public class GameServiceImpl implements GameService {
     public Mono<Game> createGame(String playerName) {
         Game game = new Game();
         game.setPlayerName(playerName);
-        // Initialize other game properties as needed
+
         return gameRepository.save(game);
     }
 
@@ -29,7 +29,7 @@ public class GameServiceImpl implements GameService {
     public Mono<Game> playGame(String gameId, String playData) {
         return gameRepository.findById(gameId)
                 .flatMap(game -> {
-                    // Update game properties based on playData
+
                     return gameRepository.save(game);
                 });
     }
