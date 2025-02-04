@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 import java.util.Comparator;
 
 @Service
-public class PlayerServiceImpl implements PlayerService{
+public class PlayerServiceImpl implements PlayerService {
     private static final Logger log = LoggerFactory.getLogger(PlayerServiceImpl.class);
 
     @Autowired
@@ -49,7 +49,7 @@ public class PlayerServiceImpl implements PlayerService{
     }
 
     @Override
-    public Mono<Player> createNewPlayer(String name){
+    public Mono<Player> createNewPlayer(String name) {
         return this.playerRepository.findFirstByName(name)
                 .doOnSuccess(player -> log.info("Found player: {}", player))
                 .switchIfEmpty(this.playerRepository.save(new Player(name)))
@@ -58,10 +58,9 @@ public class PlayerServiceImpl implements PlayerService{
     }
 
     @Override
-    public Mono<Player> findPlayerById(int id){
+    public Mono<Player> findPlayerById(int id) {
         return this.playerRepository.findById(id)
                 .doOnNext(player -> log.info("Found player by id: {}", player))
                 .switchIfEmpty(Mono.error(new PlayerNotFoundException(id)));
     }
-
 }
