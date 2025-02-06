@@ -19,10 +19,10 @@ public class PlayerServiceImpl implements PlayerService {
     @Autowired
     private PlayerRepository playerRepository;
 
-    @Override
+    /*@Override
     public Mono<Player> save(Player player) {
         return this.playerRepository.save(player);
-    }
+    }*/
 
     @Override
     public Flux<Player> getPlayersSorted() {
@@ -42,8 +42,8 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public Mono<Player> updatePlayerScore(Player player, double prizeAmount) {
-        player.setScore(player.getScore() + prizeAmount);
+    public Mono<Player> updatePlayerScore(Player player, double score) {
+        player.setScore(player.getScore() + score);
         return this.playerRepository.save(player).doOnSuccess(p ->
             log.info("Player score successfully updated to {} with playerId {}", p.getScore(), p.getId()));
     }
@@ -62,5 +62,10 @@ public class PlayerServiceImpl implements PlayerService {
         return this.playerRepository.findById(id)
                 .doOnNext(player -> log.info("Found player by id: {}", player))
                 .switchIfEmpty(Mono.error(new PlayerNotFoundException(id)));
+    }
+    @Override
+    public Mono<Player> updatePlayer(Player player) {
+        return playerRepository.save(player)
+                .doOnSuccess(p -> log.info("Player successfully updated with id {}", p.getId()));
     }
 }

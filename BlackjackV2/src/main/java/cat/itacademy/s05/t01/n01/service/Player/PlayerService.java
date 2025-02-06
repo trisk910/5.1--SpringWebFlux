@@ -5,10 +5,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface PlayerService {
-    Mono<Player> save(Player player);
+    //Mono<Player> save(Player player);
     Flux<Player> getPlayersSorted();
     Mono<Player> updatePlayerName(int id, String newName);
-    Mono<Player> updatePlayerScore(Player player, double prizeAmount);
+    Mono<Player> updatePlayerScore(Player player, double score);
     Mono<Player> createNewPlayer(String name);
     Mono<Player> findPlayerById(int id);
+    Mono<Player> updatePlayer(Player player);
 }
