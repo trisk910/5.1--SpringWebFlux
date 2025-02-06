@@ -82,7 +82,7 @@ public class GameServiceImpl implements GameService {
         int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
         if (playerHandValue > 21) {
             game.setStatus("LOOSE");
-            updatePlayerScore(game.getPlayerName(), -1);
+            updatePlayerScore(game.getPlayerName(), 0);
         } else if (playerHandValue == 21) {
             game.setStatus("WIN");
             updatePlayerScore(game.getPlayerName(), 1);
@@ -113,19 +113,19 @@ public class GameServiceImpl implements GameService {
 
     private Mono<Game> handleStandAction(Game game, Deck deck) {
         int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
-        do
+        do {
             game.getDealerCards().add(deck.drawCard());
-        while (shouldDealerDraw(game.getDealerCards()));
+        }while (shouldDealerDraw(game.getDealerCards()));
         int dealerHandValue = CardUtils.calculateHandValue(game.getDealerCards());
         if (playerHandValue > 21) {
             game.setStatus("LOOSE");
-            updatePlayerScore(game.getPlayerName(), -1);
+            updatePlayerScore(game.getPlayerName(), 0);
         } else if (dealerHandValue > 21 || playerHandValue > dealerHandValue) {
             game.setStatus("WIN");
             updatePlayerScore(game.getPlayerName(), 1);
         } else if (playerHandValue < dealerHandValue) {
             game.setStatus("LOOSE");
-            updatePlayerScore(game.getPlayerName(), -1);
+            updatePlayerScore(game.getPlayerName(), 0);
         } else {
             game.setStatus("TIE");
         }
