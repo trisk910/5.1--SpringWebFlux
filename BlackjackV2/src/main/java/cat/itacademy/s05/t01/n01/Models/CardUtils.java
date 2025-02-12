@@ -20,10 +20,15 @@ public class CardUtils {
                 case ACE: aceCount++; value += 11; break;
             }
         }
+        boolean adjustAces = true;
         do{
-            value -= 10;
-            aceCount--;
-        }while (value > 21 && aceCount > 0);
+            if (value > 21 && aceCount > 0) {
+                value -= 10;
+                aceCount--;
+            } else {
+                adjustAces = false;
+            }
+        }while (adjustAces);
         return value;
     }
 }

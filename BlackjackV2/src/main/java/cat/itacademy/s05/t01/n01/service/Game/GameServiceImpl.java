@@ -18,6 +18,8 @@ public class GameServiceImpl implements GameService {
     @Autowired
     private PlayerService playerService;
 
+    private static final int dealerSoft = 17;
+
 
     @Override
     public Mono<Game> createGame(String playerName) {
@@ -77,55 +79,40 @@ public class GameServiceImpl implements GameService {
 
     private Mono<Game> handleHitAction(Game game, Deck deck) {
         game.getPlayerCards().add(deck.drawCard());
-        game.getDealerCards().add(deck.drawCard());
-        game.setStatus("IN_PROGRESS");
         int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
+        logger.info("Player hand value: {}", playerHandValue);
         if (playerHandValue > 21) {
-            game.setStatus("LOOSE");
-            updatePlayerScore(game.getPlayerName(), 0);
-        } else if (playerHandValue == 21) {
-            game.setStatus("WIN");
-            updatePlayerScore(game.getPlayerName(), 1);
+            game.setStatus("LOSE");
+            updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
+        }else {
+            game.setStatus("IN_PROGRESS");
         }
         return gameRepository.save(game);
     }
 
-    /*private Mono<Game> handleStandAction(Game game, Deck deck) {
-        int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
-        do
-            game.getDealerCards().add(deck.drawCard());
-        while (CardUtils.calculateHandValue(game.getDealerCards()) < 17);
-        int dealerHandValue = CardUtils.calculateHandValue(game.getDealerCards());
-        if (playerHandValue > 21) {
-            game.setStatus("LOOSE");
-            updatePlayerScore(game.getPlayerName(), -1);
-        } else if (dealerHandValue > 21 || playerHandValue > dealerHandValue) {
-            game.setStatus("WIN");
-            updatePlayerScore(game.getPlayerName(), 1);
-        } else if (playerHandValue < dealerHandValue) {
-            game.setStatus("LOOSE");
-            updatePlayerScore(game.getPlayerName(), -1);
-        } else {
-            game.setStatus("TIE");
-        }
-        return gameRepository.save(game);
-    }*/
-
     private Mono<Game> handleStandAction(Game game, Deck deck) {
-        int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
         do {
-            game.getDealerCards().add(deck.drawCard());
-        }while (shouldDealerDraw(game.getDealerCards()));
+            Card drawnCard = deck.drawCard();
+            game.getDealerCards().add(drawnCard);
+            logger.info("Dealer draws card: {} of {}", drawnCard.getRank(), drawnCard.getSuit());
+        } while (shouldDealerDraw(game.getDealerCards()));
+        return updateGameStatus(game);
+    }
+
+    private Mono<Game> updateGameStatus(Game game) {
+        int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
         int dealerHandValue = CardUtils.calculateHandValue(game.getDealerCards());
+        logger.info("Player hand value: {}", playerHandValue);
+        logger.info("Dealer hand value: {}", dealerHandValue);
         if (playerHandValue > 21) {
-            game.setStatus("LOOSE");
-            updatePlayerScore(game.getPlayerName(), 0);
-        } else if (dealerHandValue > 21 || playerHandValue > dealerHandValue) {
+            game.setStatus("LOSE");
+            updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
+        } else if (playerHandValue == 21 || dealerHandValue > 21 || playerHandValue > dealerHandValue) {
             game.setStatus("WIN");
-            updatePlayerScore(game.getPlayerName(), 1);
+            updatePlayerScore(game.getPlayerName(), game.getBetAmount());
         } else if (playerHandValue < dealerHandValue) {
-            game.setStatus("LOOSE");
-            updatePlayerScore(game.getPlayerName(), 0);
+            game.setStatus("LOSE");
+            updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
         } else {
             game.setStatus("TIE");
         }
@@ -134,18 +121,82 @@ public class GameServiceImpl implements GameService {
 
     private boolean shouldDealerDraw(List<Card> dealerCards) {
         int handValue = CardUtils.calculateHandValue(dealerCards);
-        boolean hasSoft17 = handValue == 17 && dealerCards.stream().anyMatch(card -> card.getRank().equals("ACE"));
-        return handValue < 17 || hasSoft17;
+        return handValue < dealerSoft;
     }
+
+    private void updatePlayerScore(String playerName, double score) {
+        playerService.createNewPlayer(playerName)
+                .flatMap(player -> playerService.updatePlayerScore(player, score))
+                .subscribe();
+    }
+
+    /*private Mono<Game> handleAction(Game game, String action, double betAmount) {
+        Deck deck = new Deck();
+        switch (action.toUpperCase()) {
+            case "BET":
+                return handleBetAction(game, betAmount);
+            case "HIT":
+                return handleHitAction(game, deck);
+            case "STAND":
+                return handleStandAction(game, deck);
+            default:
+                throw new IllegalArgumentException("Invalid action: " + action);
+        }
+    }
+
+    private Mono<Game> handleBetAction(Game game, double betAmount) {
+        game.setBetAmount(betAmount);
+        game.setStatus("BET_PLACED");
+        return gameRepository.save(game);
+    }
+
+    private Mono<Game> handleHitAction(Game game, Deck deck) {
+        game.getPlayerCards().add(deck.drawCard());
+        int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
+        if (playerHandValue > 21) {
+            game.setStatus("LOSE");
+            updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
+        } else if (playerHandValue == 21) {
+            game.setStatus("WIN");
+            updatePlayerScore(game.getPlayerName(), game.getBetAmount());
+        } else {
+            game.setStatus("IN_PROGRESS");
+        }
+        return gameRepository.save(game);
+    }
+
+    private Mono<Game> handleStandAction(Game game, Deck deck) {
+        do {
+            game.getDealerCards().add(deck.drawCard());
+        } while (shouldDealerDraw(game.getDealerCards()));
+        int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
+        int dealerHandValue = CardUtils.calculateHandValue(game.getDealerCards());
+        if (dealerHandValue > 21 || playerHandValue > dealerHandValue) {
+            game.setStatus("WIN");
+            updatePlayerScore(game.getPlayerName(), game.getBetAmount());
+        } else if (playerHandValue < dealerHandValue) {
+            game.setStatus("LOSE");
+            updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
+        } else {
+            game.setStatus("TIE");
+        }
+        return gameRepository.save(game);
+    }
+
+    private boolean shouldDealerDraw(List<Card> dealerCards) {
+        int handValue = CardUtils.calculateHandValue(dealerCards);
+        return handValue < dealerSoft;
+    }
+
+    private void updatePlayerScore(String playerName, double score) {
+        playerService.createNewPlayer(playerName)
+                .flatMap(player -> playerService.updatePlayerScore(player, score))
+                .subscribe();
+    }*/
+
 
     @Override
     public Mono<Void> deleteGame(String id) {
         return gameRepository.deleteById(id);
-    }
-
-    private void updatePlayerScore(String playerName, int score) {
-        playerService.createNewPlayer(playerName)
-                .flatMap(player -> playerService.updatePlayerScore(player, score))
-                .subscribe();
     }
 }
