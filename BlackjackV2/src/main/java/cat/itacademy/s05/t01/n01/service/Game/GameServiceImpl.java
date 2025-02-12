@@ -1,4 +1,5 @@
 package cat.itacademy.s05.t01.n01.service.Game;
+
 import cat.itacademy.s05.t01.n01.Models.*;
 import cat.itacademy.s05.t01.n01.repository.GameRepository;
 import cat.itacademy.s05.t01.n01.service.Player.PlayerService;
@@ -12,14 +13,18 @@ import java.util.List;
 
 @Service
 public class GameServiceImpl implements GameService {
-    private static Logger logger = LogManager.getLogger(GameServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(GameServiceImpl.class);
+    private static final int DEALER_SOFT = 17;
+    private static final String STATUS_LOSE = "LOSE";
+    private static final String STATUS_WIN = "WIN";
+    private static final String STATUS_TIE = "TIE";
+    private static final String STATUS_IN_PROGRESS = "IN_PROGRESS";
+    private static final String STATUS_BET_PLACED = "BET_PLACED";
+
     @Autowired
     private GameRepository gameRepository;
     @Autowired
     private PlayerService playerService;
-
-    private static final int dealerSoft = 17;
-
 
     @Override
     public Mono<Game> createGame(String playerName) {
@@ -47,14 +52,15 @@ public class GameServiceImpl implements GameService {
         logger.info("Playing game with Action: {}, betAmount: {}", action, betAmount);
         return gameRepository.findById(id)
                 .flatMap(game -> {
-                    if (isGameOver(game))
+                    if (isGameOver(game)) {
                         return Mono.just(game);
+                    }
                     return handleAction(game, action, betAmount);
                 });
     }
 
     private boolean isGameOver(Game game) {
-        return "LOOSE".equals(game.getStatus()) || "WIN".equals(game.getStatus());
+        return STATUS_LOSE.equals(game.getStatus()) || STATUS_WIN.equals(game.getStatus());
     }
 
     private Mono<Game> handleAction(Game game, String action, double betAmount) {
@@ -73,7 +79,7 @@ public class GameServiceImpl implements GameService {
 
     private Mono<Game> handleBetAction(Game game, double betAmount) {
         game.setBetAmount(betAmount);
-        game.setStatus("BET_PLACED");
+        game.setStatus(STATUS_BET_PLACED);
         return gameRepository.save(game);
     }
 
@@ -82,10 +88,10 @@ public class GameServiceImpl implements GameService {
         int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
         logger.info("Player hand value: {}", playerHandValue);
         if (playerHandValue > 21) {
-            game.setStatus("LOSE");
+            game.setStatus(STATUS_LOSE);
             updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
-        }else {
-            game.setStatus("IN_PROGRESS");
+        } else {
+            game.setStatus(STATUS_IN_PROGRESS);
         }
         return gameRepository.save(game);
     }
@@ -105,23 +111,23 @@ public class GameServiceImpl implements GameService {
         logger.info("Player hand value: {}", playerHandValue);
         logger.info("Dealer hand value: {}", dealerHandValue);
         if (playerHandValue > 21) {
-            game.setStatus("LOSE");
+            game.setStatus(STATUS_LOSE);
             updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
         } else if (playerHandValue == 21 || dealerHandValue > 21 || playerHandValue > dealerHandValue) {
-            game.setStatus("WIN");
+            game.setStatus(STATUS_WIN);
             updatePlayerScore(game.getPlayerName(), game.getBetAmount());
         } else if (playerHandValue < dealerHandValue) {
-            game.setStatus("LOSE");
+            game.setStatus(STATUS_LOSE);
             updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
         } else {
-            game.setStatus("TIE");
+            game.setStatus(STATUS_TIE);
         }
         return gameRepository.save(game);
     }
 
     private boolean shouldDealerDraw(List<Card> dealerCards) {
         int handValue = CardUtils.calculateHandValue(dealerCards);
-        return handValue < dealerSoft;
+        return handValue < DEALER_SOFT;
     }
 
     private void updatePlayerScore(String playerName, double score) {
@@ -129,71 +135,6 @@ public class GameServiceImpl implements GameService {
                 .flatMap(player -> playerService.updatePlayerScore(player, score))
                 .subscribe();
     }
-
-    /*private Mono<Game> handleAction(Game game, String action, double betAmount) {
-        Deck deck = new Deck();
-        switch (action.toUpperCase()) {
-            case "BET":
-                return handleBetAction(game, betAmount);
-            case "HIT":
-                return handleHitAction(game, deck);
-            case "STAND":
-                return handleStandAction(game, deck);
-            default:
-                throw new IllegalArgumentException("Invalid action: " + action);
-        }
-    }
-
-    private Mono<Game> handleBetAction(Game game, double betAmount) {
-        game.setBetAmount(betAmount);
-        game.setStatus("BET_PLACED");
-        return gameRepository.save(game);
-    }
-
-    private Mono<Game> handleHitAction(Game game, Deck deck) {
-        game.getPlayerCards().add(deck.drawCard());
-        int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
-        if (playerHandValue > 21) {
-            game.setStatus("LOSE");
-            updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
-        } else if (playerHandValue == 21) {
-            game.setStatus("WIN");
-            updatePlayerScore(game.getPlayerName(), game.getBetAmount());
-        } else {
-            game.setStatus("IN_PROGRESS");
-        }
-        return gameRepository.save(game);
-    }
-
-    private Mono<Game> handleStandAction(Game game, Deck deck) {
-        do {
-            game.getDealerCards().add(deck.drawCard());
-        } while (shouldDealerDraw(game.getDealerCards()));
-        int playerHandValue = CardUtils.calculateHandValue(game.getPlayerCards());
-        int dealerHandValue = CardUtils.calculateHandValue(game.getDealerCards());
-        if (dealerHandValue > 21 || playerHandValue > dealerHandValue) {
-            game.setStatus("WIN");
-            updatePlayerScore(game.getPlayerName(), game.getBetAmount());
-        } else if (playerHandValue < dealerHandValue) {
-            game.setStatus("LOSE");
-            updatePlayerScore(game.getPlayerName(), -game.getBetAmount());
-        } else {
-            game.setStatus("TIE");
-        }
-        return gameRepository.save(game);
-    }
-
-    private boolean shouldDealerDraw(List<Card> dealerCards) {
-        int handValue = CardUtils.calculateHandValue(dealerCards);
-        return handValue < dealerSoft;
-    }
-
-    private void updatePlayerScore(String playerName, double score) {
-        playerService.createNewPlayer(playerName)
-                .flatMap(player -> playerService.updatePlayerScore(player, score))
-                .subscribe();
-    }*/
-
 
     @Override
     public Mono<Void> deleteGame(String id) {

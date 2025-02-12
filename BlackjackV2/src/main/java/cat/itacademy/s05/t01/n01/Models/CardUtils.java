@@ -1,4 +1,5 @@
 package cat.itacademy.s05.t01.n01.Models;
+
 import java.util.List;
 
 public class CardUtils {
@@ -20,15 +21,10 @@ public class CardUtils {
                 case ACE: aceCount++; value += 11; break;
             }
         }
-        boolean adjustAces = true;
         do{
-            if (value > 21 && aceCount > 0) {
-                value -= 10;
-                aceCount--;
-            } else {
-                adjustAces = false;
-            }
-        }while (adjustAces);
+            value -= 10;
+            aceCount--;
+        }while (value > 21 && aceCount > 0);
         return value;
     }
 }
