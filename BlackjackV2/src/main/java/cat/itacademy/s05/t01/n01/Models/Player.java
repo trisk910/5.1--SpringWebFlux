@@ -10,6 +10,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table(name = "player")
 public class Player {
     @Getter
+    @Setter
     @Id
     private int id;
     @NotNull

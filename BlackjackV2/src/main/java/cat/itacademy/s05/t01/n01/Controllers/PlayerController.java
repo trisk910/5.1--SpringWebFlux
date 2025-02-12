@@ -16,7 +16,6 @@ import java.util.List;
 
 @RestController
 public class PlayerController {
-
     @Autowired
     private PlayerServiceImpl playerService;
     @ApiResponses(value = {
