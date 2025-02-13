@@ -30,8 +30,21 @@ public class PlayerServiceImpl implements PlayerService {
                 .sort(Comparator.comparingDouble(Player::getScore).reversed())
                 .switchIfEmpty(Mono.empty());
     }
+   @Override
+   public Mono<Player> updatePlayerName(int id, String newName) {
+       if (newName == null) {
+           return Mono.error(new IllegalArgumentException("Name cannot be null"));
+       }
+       return findPlayerById(id)
+               .flatMap(p -> {
+                   p.setName(newName);
+                   return playerRepository.save(p);
+               })
+               .switchIfEmpty(Mono.error(new RuntimeException("Player not found")))
+               .doOnSuccess(p -> log.info("Player name successfully updated to {} with playerId {}", p.getName(), p.getId()));
+   }
 
-    @Override
+    /*@Override
     public Mono<Player> updatePlayerName(int id, String newName) {
         return findPlayerById(id).map(p -> {
             p.setName(newName);
@@ -39,7 +52,7 @@ public class PlayerServiceImpl implements PlayerService {
         }).flatMap(p ->
             this.playerRepository.save(p)).doOnSuccess(p ->
                 log.info("Player name successfully updated to {} with playerId {}", p.getName(), p.getId()));
-    }
+    }*/
 
     @Override
     public Mono<Player> updatePlayerScore(Player player, double score) {

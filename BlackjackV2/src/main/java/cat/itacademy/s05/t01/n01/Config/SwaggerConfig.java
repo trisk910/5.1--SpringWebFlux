@@ -18,7 +18,7 @@ public class SwaggerConfig {
         server.setDescription("Blackjack");
         Info information = new Info()
                 .title("Blackjack")
-                .version("1.0")
+                .version("2.0")
                 .description("This API exposes endpoints to manage a blackjack game.");
         return new OpenAPI().info(information).servers(List.of(server));
     }

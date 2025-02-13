@@ -12,6 +12,8 @@ import java.util.List;
 @Document(collection = "games")
 public class Game {
     @Id
+    @Getter
+    @Setter
     private String id;
     @Setter
     private String playerName;
