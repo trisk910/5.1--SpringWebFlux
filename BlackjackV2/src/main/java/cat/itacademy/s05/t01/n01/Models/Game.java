@@ -9,19 +9,18 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.ArrayList;
 import java.util.List;
 @Getter
+@Setter
 @Document(collection = "games")
 public class Game {
     @Id
-    @Getter
-    @Setter
     private String id;
-    @Setter
+
     private String playerName;
-    @Setter
+
     private String status;
-    @Setter
+
     private double betAmount;
-    @Setter
+
     private List<Card> playerCards;
     private List<Card> dealerCards;
 
@@ -31,5 +30,53 @@ public class Game {
         this.betAmount = 0;
         this.playerCards = new ArrayList<>();
         this.dealerCards = new ArrayList<>();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public double getBetAmount() {
+        return betAmount;
+    }
+
+    public void setBetAmount(double betAmount) {
+        this.betAmount = betAmount;
+    }
+
+    public List<Card> getPlayerCards() {
+        return playerCards;
+    }
+
+    public void setPlayerCards(List<Card> playerCards) {
+        this.playerCards = playerCards;
+    }
+
+    public List<Card> getDealerCards() {
+        return dealerCards;
+    }
+
+    public void setDealerCards(List<Card> dealerCards) {
+        this.dealerCards = dealerCards;
     }
 }

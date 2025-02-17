@@ -1,27 +1,19 @@
 package cat.itacademy.s05.t01.n01.Models;
-
-
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
-
 import java.util.Objects;
-
+@Getter
+@Setter
 @Table(name = "player")
 public class Player {
-    @Getter
-    @Setter
     @Id
     private int id;
     @NotNull
     private String name;
-    @Getter
-    @Setter
     private double score;
-    @Setter
-    @Getter
     private int gamesPlayed;
 
     public Player(String name) {
@@ -34,6 +26,30 @@ public class Player {
 
     public void setName(@NotNull String name) {
         this.name = name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
+    }
+
+    public int getGamesPlayed() {
+        return gamesPlayed;
+    }
+
+    public void setGamesPlayed(int gamesPlayed) {
+        this.gamesPlayed = gamesPlayed;
     }
 
     @Override
