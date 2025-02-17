@@ -1,4 +1,3 @@
-// src/main/java/cat/itacademy/s05/t01/n01/Models/Game.java
 package cat.itacademy.s05.t01.n01.Models;
 
 import lombok.Getter;
