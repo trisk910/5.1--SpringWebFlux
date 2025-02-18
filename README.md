@@ -80,21 +80,6 @@ Swagger is used to generate automatic documentation for the API.
 
 ---
 
-## Level 2: Dockerization of the Application
-
-### Steps for Dockerizing the Application
-1. **Create a Dockerfile** at the root of the project.
-2. **Create a .dockerignore file** at the root of the project.
-3. **Install Docker and log in**.
-4. **Build the Docker image**.
-5. **Run the Docker image**.
-6. **Tag the Docker image**.
-7. **Log in to Docker Hub**.
-8. **Push the image to Docker Hub**.
-9. **Test the image to ensure it works**.
-
----
-
 ## Objectives
 - Learn to program a **reactive API in Java** using **Spring Boot**, with connections to both **relational (MySQL)** and **non-relational (MongoDB)** databases.
 - Apply **documentation techniques** and **unit testing implementation**.
